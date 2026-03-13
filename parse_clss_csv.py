@@ -54,6 +54,8 @@ COL_CAMPUS     = 23
 COL_CREDITS    = 26
 COL_ENROLL     = 29
 COL_MAX_ENROLL = 30
+COL_NOTES_1    = 43   # Section Notes#1 (often empty)
+COL_NOTES_2    = 44   # Section Notes#2 (CityOnline boilerplate etc.)
 
 MONTHS = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -81,7 +83,7 @@ def parse_csv_file(path: str) -> list[dict]:
         if not any(row):
             continue
         # Pad short rows so index access is safe
-        while len(row) <= max(COL_MAX_ENROLL, COL_CAMPUS):
+        while len(row) <= max(COL_MAX_ENROLL, COL_CAMPUS, COL_NOTES_2):
             row.append('')
 
         # Skip course group header rows: col 0 has content but col 1 is empty
@@ -111,6 +113,7 @@ def parse_csv_file(path: str) -> list[dict]:
             'enrollment':    row[COL_ENROLL].strip() or '0',
             'maxEnrollment': row[COL_MAX_ENROLL].strip() or '0',
             'inPersonDates': extract_dates(meetings_raw, sched_type),
+            'notes':         clean_notes(row[COL_NOTES_1], row[COL_NOTES_2]),
         })
 
     return sections
@@ -135,8 +138,12 @@ def clean_instructor(raw: str) -> str:
     return '; '.join(unique) if unique else 'Staff'
 
 
+def clean_notes(n1: str, n2: str) -> str:
+    """Combine Notes#1 and Notes#2, stripping excess whitespace. Returns '' if both empty."""
+    parts = [p.strip() for p in [n1, n2] if p.strip()]
+    return ' '.join(parts)
+
 # ── In-person date extraction ─────────────────────────────────────────────────
-# Only applies to Online Hybrid sections.
 # Detects two patterns in the Meetings column:
 #   Pattern 1 – a timed entry on a specific date:
 #     "F 1:10pm-3pm (10/02/2026) [Lecture (Class)]"
