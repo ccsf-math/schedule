@@ -1,3 +1,3 @@
 # Mathematics Department Schedules
 
-* Fall 2026 - Draft
+* [DRAFT Fall 2026 Schedule ](https://ccsf-math.github.io/schedule/fa26.html)
