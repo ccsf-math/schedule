@@ -86,6 +86,9 @@ main{padding:32px 40px 64px}
 .linked-crn-val{font-size:.72rem;font-weight:500;color:var(--ink)}
 .linked-meeting{font-size:.72rem;color:var(--ink-light)}
 .linked-units{font-size:.68rem;padding:1px 6px;background:var(--cream);border:1px solid var(--border-light);border-radius:3px;color:var(--ink-muted)}
+.section-notes{font-size:.72rem;color:var(--ink-muted);line-height:1.5;border-top:1px solid var(--border-light);padding-top:8px;margin-top:2px}
+.section-notes a{color:var(--teal);text-decoration:none}
+.section-notes a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -95,7 +98,7 @@ main{padding:32px 40px 64px}
 <div class="hero">
   <div class="hero-text">
     <h1>DRAFT Fall 2026</h1>
-    <p>Generated 4/6/2026</p>
+    <p>Updated 4/6/2026</p>
   </div>
   <div class="hero-stats">
     <div class="stat-block"><div class="num" id="heroSections">113</div><div class="lbl">Sections</div></div>
@@ -264,7 +267,8 @@ function render(){
         const supPct=supCap>0?supEnroll/supCap:0;const supEc=enrollClass(supPct);const supFw=Math.min(100,Math.round(supPct*100));
         linkedHtml=`<div class="linked-support"><div class="linked-support-label">${pairedSC} &mdash; Corequisite Support</div><div class="linked-support-row"><span class="linked-crn-val">${supCrn}</span><span class="linked-meeting">${sup.meetingPattern}</span><span class="linked-units">${sup.credits} units</span></div><div class="enrollment-row" style="margin-top:6px"><div class="enroll-label"><span class="enroll-text" style="font-size:.65rem">Support enrollment</span><span class="enroll-count ${supEc}" style="font-size:.68rem">${supEnroll} / ${supCap}</span></div><div class="enroll-bar-track"><div class="enroll-bar-fill ${supEc}" style="width:${supFw}%"></div></div></div></div>`;
       }
-      return`<div class="section-card type-${tcc}"><div class="card-top"><div class="crn-section"><span class="crn-val">${crn}</span><br><span style="font-size:.68rem">SEC ${secNum}</span></div><span class="type-badge ${tcc}">${tl}</span></div><div class="meeting-time">${s.meetingPattern}</div><div class="instructor">${s.instructor}</div><div class="card-tags"><span class="tag campus">${s.campus}</span><span class="tag">${shortTerm(s.partOfTerm)}</span><span class="tag">${s.credits} units</span>${rc?`<span class="tag">${rc}</span>`:''}</div>${datesHtml}${linkedHtml}<div class="enrollment-row"><div class="enroll-label"><span class="enroll-text">Enrollment</span><span class="enroll-count ${ec}">${enroll} / ${cap}</span></div><div class="enroll-bar-track"><div class="enroll-bar-fill ${ec}" style="width:${fw}%"></div></div></div></div>`;
+      const notesHtml=s.sectionNotes?`<div class="section-notes">${s.sectionNotes}</div>`:'';
+      return`<div class="section-card type-${tcc}"><div class="card-top"><div class="crn-section"><span class="crn-val">${crn}</span><br><span style="font-size:.68rem">SEC ${secNum}</span></div><span class="type-badge ${tcc}">${tl}</span></div><div class="meeting-time">${s.meetingPattern}</div><div class="instructor">${s.instructor}</div><div class="card-tags"><span class="tag campus">${s.campus}</span><span class="tag">${shortTerm(s.partOfTerm)}</span><span class="tag">${s.credits} units</span>${rc?`<span class="tag">${rc}</span>`:''}</div>${datesHtml}${linkedHtml}<div class="enrollment-row"><div class="enroll-label"><span class="enroll-text">Enrollment</span><span class="enroll-count ${ec}">${enroll} / ${cap}</span></div><div class="enroll-bar-track"><div class="enroll-bar-fill ${ec}" style="width:${fw}%"></div></div></div>${notesHtml}</div>`;
     }).join('');
     return`<div class="course-group"><div class="course-header"><span class="course-code">${course}</span><span class="course-name">${g.title}</span><div class="course-meta"><div class="course-enroll-summary"><strong>${te}</strong> / ${tc} enrolled</div><span class="course-section-count">${g.sections.length} section${g.sections.length!==1?'s':''}</span></div></div><div class="sections-grid">${cards}</div></div>`;
   }).join('');
