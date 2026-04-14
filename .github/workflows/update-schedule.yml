@@ -1,0 +1,55 @@
+name: Update Schedule HTML
+
+on:
+  push:
+    paths:
+      - '**.csv'   # Triggers on any CSV pushed to the repo root
+
+jobs:
+  update-html:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # Needed to commit the updated HTML back to the repo
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Find changed CSV files and update matching HTML files
+        run: |
+          # Get the list of CSV files that were added or modified in this push
+          git diff --name-only --diff-filter=AM ${{ github.event.before }} ${{ github.sha }} \
+            | grep '\.csv$' \
+            | while read csv_file; do
+                # Derive the matching HTML filename (e.g. fa26.csv → fa26.html)
+                html_file="${csv_file%.csv}.html"
+
+                if [ -f "$html_file" ]; then
+                  echo "Updating $html_file from $csv_file ..."
+                  python3 update_schedule.py "$csv_file" "$html_file"
+                else
+                  echo "WARNING: No matching HTML found for $csv_file (expected $html_file) — skipping."
+                fi
+              done
+
+      - name: Commit and push updated HTML files
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage any HTML files that were changed by the script
+          git add '*.html'
+
+          # Only commit if there is actually something to commit
+          if git diff --cached --quiet; then
+            echo "No HTML changes to commit."
+          else
+            git commit -m "Auto-update schedule HTML from CSV [skip ci]"
+            git push
+          fi
