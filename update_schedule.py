@@ -2,9 +2,11 @@
 """
 update_schedule.py
 Usage: python3 update_schedule.py  input.csv  schedule.html
-Reads the CLSS CSV export, parses it, and replaces the let DATA=[...] block in the HTML.
+Reads the CLSS CSV export, parses it, replaces the let DATA=[...] block
+and the "Updated" timestamp in the HTML.
 """
 import csv, json, re, sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 COL_CLSS_ID=1; COL_CRN=2; COL_COURSE=8; COL_SECTION=9; COL_TITLE=10
@@ -19,6 +21,7 @@ _ID_RE  = re.compile(r'\s*\([A-Z@][A-Z0-9]*\d+\)\s*\[.*?\]|\s*\[.*?\]', re.DOTAL
 _DATE1  = re.compile(r'[A-Za-z]+\s+[\d:apm\-]+\s+\((\d{1,2})\/(\d{1,2})\/\d{4}\)\s+\[(?:Lecture|Online Hybrid)\s+\(Class\)\]')
 _DATE2  = re.compile(r'Does Not Meet\s+\((\d{1,2})\/(\d{1,2})\/\d{4}\)\s+\[(?:Lecture|Online Hybrid|Online Learning)\s+\(Class\)\]')
 _DATARE = re.compile(r'let DATA=\[.*?\];', re.DOTALL)
+_UPDRE  = re.compile(r'Updated [^<]+')
 
 def clean_instructor(raw):
     cleaned = _ID_RE.sub('', raw).strip()
@@ -74,10 +77,15 @@ for row in raw[hdr+1:]:
         'sectionNotes':   extract_notes(row),
     })
 
+# Build timestamp: e.g. "Updated 4/14/2026, 06:16 AM UTC"
+now       = datetime.now(timezone.utc)
+timestamp = f"Updated {now.month}/{now.day}/{now.year}, {now.strftime('%I:%M %p')} UTC"
+
 js      = 'let DATA=' + json.dumps(sections, ensure_ascii=False, separators=(',',':')) + ';'
 html    = html_path.read_text(encoding='utf-8')
-updated = _DATARE.sub(lambda _: js, html, count=1)   # lambda avoids re.sub misreading backslashes in JSON
+updated = _DATARE.sub(lambda _: js, html, count=1)  # lambda prevents re.sub mangling backslashes in JSON
+updated = _UPDRE.sub(timestamp, updated, count=1)
 html_path.write_text(updated, encoding='utf-8')
 
 n_notes = sum(1 for s in sections if s['sectionNotes'])
-print(f"Done: {len(sections)} sections, {len(set(s['course'] for s in sections))} courses, {n_notes} with notes → {html_path.name}")
+print(f"Done: {len(sections)} sections, {len(set(s['course'] for s in sections))} courses, {n_notes} with notes → {html_path.name} [{timestamp}]")
