@@ -3,7 +3,7 @@ name: Update Schedule HTML
 on:
   push:
     paths:
-      - '**.csv'   # Triggers on any CSV pushed to the repo root
+      - '**.csv'   # Triggers on any CSV pushed to the repo
 
 jobs:
   update-html:
@@ -23,13 +23,13 @@ jobs:
 
       - name: Find changed CSV files and update matching HTML files
         run: |
-          # Get the list of CSV files that were added or modified in this push
-          git diff --name-only --diff-filter=AM ${{ github.event.before }} ${{ github.sha }} \
+          # List CSV files added or modified in this specific commit.
+          # git diff-tree works on HEAD alone — no previous commit needed,
+          # so this is safe on first push and web UI uploads alike.
+          git diff-tree --no-commit-id -r --name-only --diff-filter=AM HEAD \
             | grep '\.csv$' \
             | while read csv_file; do
-                # Derive the matching HTML filename (e.g. fa26.csv → fa26.html)
                 html_file="${csv_file%.csv}.html"
-
                 if [ -f "$html_file" ]; then
                   echo "Updating $html_file from $csv_file ..."
                   python3 update_schedule.py "$csv_file" "$html_file"
@@ -43,10 +43,8 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Stage any HTML files that were changed by the script
           git add '*.html'
 
-          # Only commit if there is actually something to commit
           if git diff --cached --quiet; then
             echo "No HTML changes to commit."
           else
