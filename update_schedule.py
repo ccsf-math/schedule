@@ -14,6 +14,7 @@ COL_SCHED_TYPE=12; COL_PATTERN=14; COL_MEETINGS=15; COL_INSTRUCTOR=16
 COL_ROOM=17; COL_STATUS=18; COL_PART_TERM=19; COL_CAMPUS=23
 COL_CREDITS=26; COL_ENROLL=29; COL_MAX_ENROLL=30
 COL_NOTE1=43; COL_NOTE2=44
+COL_ATTRIBUTES=27
 
 MONTHS=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
@@ -41,6 +42,18 @@ def extract_notes(row):
     n2 = row[COL_NOTE2].strip() if len(row) > COL_NOTE2 else ''
     parts = [n for n in [n1, n2] if n]
     return ' '.join(parts)
+
+def extract_materials_cost(row):
+    if COL_ATTRIBUTES is None or len(row) <= COL_ATTRIBUTES:
+        return ''
+    attr = row[COL_ATTRIBUTES]
+    if 'InsMa: No-Cost OER' in attr:
+        return 'ZTC/LTC'
+    if 'InsMa: No-Cost, Not OER' in attr:
+        return 'ZTC/LTC'
+    if 'InsMa: Low-Cost Material' in attr:
+        return 'ZTC/LTC'
+    return 'Not ZTC/LTC'
 
 csv_path  = Path(sys.argv[1])
 html_path = Path(sys.argv[2])
@@ -75,6 +88,7 @@ for row in raw[hdr+1:]:
         'maxEnrollment':  row[COL_MAX_ENROLL].strip() or '0',
         'inPersonDates':  extract_dates(mt, st),
         'sectionNotes':   extract_notes(row),
+        'materialsCost': extract_materials_cost(row),
     })
 
 # Build timestamp: e.g. "Updated 4/14/2026, 06:16 AM UTC"
